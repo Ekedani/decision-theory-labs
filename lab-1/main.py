@@ -48,40 +48,43 @@ def input_experts():
 
 def input_scoring_system():
     """
-    Запитує систему балів (наприклад, '10' для десятибальної системи).
-    Повертає максимальне значення балів як число (int).
+    Запитує систему балів: мінімальну та максимальну оцінку.
+    Якщо нічого не введено, використовується значення за замовчуванням: мінімум 0, максимум 10.
+    Повертає кортеж (scoring_min, scoring_max).
     """
     while True:
-        scoring_input = input("\nВведіть систему балів (наприклад, '10' для десятибальної системи): ").strip()
+        scoring_min_input = input("\nВведіть мінімальну оцінку (за замовчуванням 0): ").strip()
+        scoring_max_input = input("Введіть максимальну оцінку (за замовчуванням 10): ").strip()
         try:
-            scoring_max = float(scoring_input)
-            if scoring_max <= 0:
-                print("Система балів повинна бути додатнім числом.")
+            scoring_min = float(scoring_min_input) if scoring_min_input else 0.0
+            scoring_max = float(scoring_max_input) if scoring_max_input else 10.0
+            if scoring_min >= scoring_max:
+                print("Мінімальна оцінка повинна бути меншою за максимальну. Спробуйте ще раз.")
                 continue
             break
         except ValueError:
-            print("Некоректне значення. Будь ласка, введіть число.")
-    return scoring_max
+            print("Некоректне значення. Будь ласка, введіть числа.")
+    return scoring_min, scoring_max
 
 
-def input_scores(experts, alternatives, scoring_max):
+def input_scores(experts, alternatives, scoring_min, scoring_max):
     """
     Опитування експертів: для кожного експерта запитуються оцінки для кожної альтернативи.
-    Якщо введене значення не є числом, або знаходиться поза межами [0, scoring_max],
-    то воно нормалізується (значення нижче 0 стає 0, вище scoring_max — scoring_max).
+    Якщо введене значення не є числом або знаходиться поза межами [scoring_min, scoring_max],
+    то воно нормалізується (значення менше scoring_min стає scoring_min, вище scoring_max — scoring_max).
     Повертає матрицю оцінок (список списків).
     """
     scores = []
     for expert in experts:
-        print(f"\nВведіть оцінки експерта {expert} (система: {scoring_max} балів):")
+        print(f"\nВведіть оцінки експерта {expert} (система: від {scoring_min} до {scoring_max}):")
         expert_scores = []
         for alt in alternatives:
             while True:
                 try:
                     score_input = input(f"  Оцінка для альтернативи '{alt}': ")
                     score = float(score_input)
-                    if score < 0:
-                        score = 0.0
+                    if score < scoring_min:
+                        score = scoring_min
                     elif score > scoring_max:
                         score = scoring_max
                     expert_scores.append(score)
@@ -154,9 +157,9 @@ def main():
 
     alternatives = input_alternatives()
     experts = input_experts()
-    scoring_system = input_scoring_system()
+    scoring_min, scoring_max = input_scoring_system()
 
-    scores = input_scores(experts, alternatives, scoring_system)
+    scores = input_scores(experts, alternatives, scoring_min, scoring_max)
     display_raw_scores(experts, alternatives, scores)
 
     normalized_scores = compute_normalized_scores(scores, len(experts), len(alternatives))
