@@ -1,3 +1,39 @@
+import json
+
+
+def load_scenario_from_json(file_path):
+    """
+    Завантажує сценарій тестування з JSON-файлу.
+    Повертає альтернативи, експертів, систему оцінок і оцінки.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+            alternatives = data.get('alternatives', [])
+            experts = data.get('experts', [])
+            scoring_min = data.get('scoring_min', 0)
+            scoring_max = data.get('scoring_max', 10)
+            scores = data.get('scores', [])
+            return alternatives, experts, scoring_min, scoring_max, scores
+    except FileNotFoundError:
+        print(f"Файл {file_path} не знайдено.")
+    except json.JSONDecodeError:
+        print(f"Помилка при зчитуванні JSON з файлу {file_path}.")
+    return [], [], 0, 10, []
+
+
+def input_scenario_manually():
+    """
+    Дозволяє користувачеві ввести сценарій вручну.
+    Повертає альтернативи, експертів, систему оцінок і оцінки.
+    """
+    alternatives = input_alternatives()
+    experts = input_experts()
+    scoring_min, scoring_max = input_scoring_system()
+    scores = input_scores(experts, alternatives, scoring_min, scoring_max)
+    return alternatives, experts, scoring_min, scoring_max, scores
+
+
 def input_alternatives():
     """
     Запитує кількість альтернатив та їх імена.
@@ -29,7 +65,7 @@ def input_experts():
     """
     while True:
         try:
-            n_experts = int(input("\nВведіть кількість експертів: "))
+            n_experts = int(input("Введіть кількість експертів: "))
             if n_experts <= 0:
                 print("Кількість експертів повинна бути додатнім числом.")
                 continue
@@ -53,7 +89,7 @@ def input_scoring_system():
     Повертає кортеж (scoring_min, scoring_max).
     """
     while True:
-        scoring_min_input = input("\nВведіть мінімальну оцінку (за замовчуванням 0): ").strip()
+        scoring_min_input = input("Введіть мінімальну оцінку (за замовчуванням 0): ").strip()
         scoring_max_input = input("Введіть максимальну оцінку (за замовчуванням 10): ").strip()
         try:
             scoring_min = float(scoring_min_input) if scoring_min_input else 0.0
@@ -155,13 +191,18 @@ def display_ranked_alternatives(ranked):
 def main():
     print("Метод безпосередньої оцінки порівняльної переваги альтернатив\n")
 
-    alternatives = input_alternatives()
-    experts = input_experts()
-    scoring_min, scoring_max = input_scoring_system()
+    use_json = input("Бажаєте завантажити сценарій з JSON файлу? (y/n): ").strip().lower()
 
-    scores = input_scores(experts, alternatives, scoring_min, scoring_max)
+    if use_json == 'y':
+        alternatives, experts, scoring_min, scoring_max, scores = load_scenario_from_json('test.json')
+
+        if not (alternatives and experts and scores):
+            print("Неповні або некоректні дані в файлі. Перевірте формат JSON.")
+            return
+    else:
+        alternatives, experts, scoring_min, scoring_max, scores = input_scenario_manually()
+
     display_raw_scores(experts, alternatives, scores)
-
     normalized_scores = compute_normalized_scores(scores, len(experts), len(alternatives))
     ranked = rank_alternatives(alternatives, normalized_scores)
     display_ranked_alternatives(ranked)

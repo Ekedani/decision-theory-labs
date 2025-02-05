@@ -138,7 +138,7 @@ def assign_ranks(criteria_values):
     return ranks
 
 
-def print_result_table(alternatives, states, matrix, criteria_values, ranks, criterion_name):
+def print_result_table(alternatives, states, scores, criteria_values, ranks, criterion_name):
     """
     Виводить таблицю початкових значень (матрицю корисності) із стовпчиком
     обчислених значень критерію та стовпчиком з рангами.
@@ -147,22 +147,18 @@ def print_result_table(alternatives, states, matrix, criteria_values, ranks, cri
     print("\nРезультати:")
     print("\t".join(header))
     for i in range(len(alternatives)):
-        row_items = [alternatives[i]] + [f"{val:.2f}" for val in matrix[i]] \
+        row_items = [alternatives[i]] + [f"{val:.2f}" for val in scores[i]] \
                     + [f"{criteria_values[i]:.2f}", str(ranks[i])]
         print("\t".join(row_items))
 
 
 def main():
     print('Критерії прийняття рішень в умовах невизначеності')
-
     alternatives = input_alternatives()
     states = input_states()
     scoring_min, scoring_max = input_scoring_system()
-    matrix = input_scores(alternatives, states, scoring_min, scoring_max)
-
+    scores = input_scores(alternatives, states, scoring_min, scoring_max)
     alpha = input_alpha()
-    criteria_values = calculate_hurwicz(matrix, alpha)
-    ranks = assign_ranks(criteria_values)
 
     if alpha == 1.0:
         criterion_name = "Вальда"
@@ -171,7 +167,9 @@ def main():
     else:
         criterion_name = f"Гурвіца (α={alpha})"
 
-    print_result_table(alternatives, states, matrix, criteria_values, ranks, criterion_name)
+    criteria_values = calculate_hurwicz(scores, alpha)
+    ranks = assign_ranks(criteria_values)
+    print_result_table(alternatives, states, scores, criteria_values, ranks, criterion_name)
 
 
 if __name__ == "__main__":
