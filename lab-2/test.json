@@ -3,7 +3,7 @@
     "states": ["X1", "X2", "X3", "X4", "X5", "X6"],
     "scoring_min": 1,
     "scoring_max": 10,
-    "alpha": 0.5,
+    "alpha": 1,
     "scores": [
         [8, 1, 6, 3, 5, 7],
         [6, 8, 7, 5, 9, 6],

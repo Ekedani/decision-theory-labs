@@ -120,30 +120,29 @@ def input_alpha():
 
 
 def input_scores(alternatives, states, scoring_min, scoring_max):
-    # TODO: Rewrite similar to lab-1
     """
     Послідовно вводить значення корисності для кожної альтернативи та кожного стану.
     Повертає матрицю оцінок як список списків.
     """
-    matrix = []
+    scores = []
     print("\nВведіть значення корисності для кожної альтернативи та кожного стану:")
     for alt in alternatives:
         row = []
         for state in states:
             while True:
                 try:
-                    value = float(input(
-                        f"Введіть значення для {alt} при {state} (від {scoring_min} до {scoring_max}): "
-                    ))
-                    if not (scoring_min <= value <= scoring_max):
-                        print(f"Значення має бути в діапазоні від {scoring_min} до {scoring_max}.")
-                        continue
+                    score_input = input(f"  Введіть значення для {alt} при {state}: ")
+                    value = float(score_input)
+                    if value < scoring_min:
+                        value = scoring_min
+                    elif value > scoring_max:
+                        value = scoring_max
                     row.append(value)
                     break
                 except ValueError:
-                    print("Некоректне значення. Будь ласка, введіть число.")
-        matrix.append(row)
-    return matrix
+                    print("  Некоректне значення, спробуйте ще раз. Будь ласка, введіть число.")
+        scores.append(row)
+    return scores
 
 
 def calculate_hurwicz(matrix, alpha):
@@ -154,12 +153,12 @@ def calculate_hurwicz(matrix, alpha):
         H = alpha * (мінімальне значення) + (1 - alpha) * (максимальне значення)
 
     При:
-      - alpha = 1.0: H = мінімальне значення (Вальда, песимістичний),
-      - alpha = 0.0: H = максимальне значення (Макмакс, оптимістичний).
+      - alpha = 0.0: H = мінімальне значення (Вальда, песимістичний),
+      - alpha = 1.0: H = максимальне значення (Макмакс, оптимістичний).
 
     Повертає список значень критерію для кожної альтернативи.
     """
-    return [alpha * min(row) + (1 - alpha) * max(row) for row in matrix]
+    return [alpha * max(row) + (1 - alpha) * min(row) for row in matrix]
 
 
 def assign_ranks(criteria_values):
@@ -177,18 +176,25 @@ def assign_ranks(criteria_values):
 
 
 def print_result_table(alternatives, states, scores, criteria_values, ranks, criterion_name):
-    # TODO: Improve output formatting
     """
-    Виводить таблицю початкових значень (матрицю корисності) із стовпчиком
+    Виводить таблицю початкових значень (матрицю корисності) зі стовпчиком
     обчислених значень критерію та стовпчиком з рангами.
+    Покращене форматування: вирівнювання за шириною стовпців.
     """
     header = ["Альтернатива"] + states + [f"Критерій {criterion_name}", "Ранг"]
-    print("\nРезультати:")
-    print("\t".join(header))
+
+    rows = [header]
     for i in range(len(alternatives)):
-        row_items = [alternatives[i]] + [f"{val:.2f}" for val in scores[i]] \
-                    + [f"{criteria_values[i]:.2f}", str(ranks[i])]
-        print("\t".join(row_items))
+        row = [alternatives[i]] + [f"{val:.2f}" for val in scores[i]] \
+              + [f"{criteria_values[i]:.2f}", str(ranks[i])]
+        rows.append(row)
+
+    num_columns = len(header)
+    col_widths = [max(len(row[col]) for row in rows) for col in range(num_columns)]
+
+    for row in rows:
+        formatted_row = "  ".join(word.ljust(col_widths[i]) for i, word in enumerate(row))
+        print(formatted_row)
 
 
 def main():
@@ -205,12 +211,12 @@ def main():
     else:
         alternatives, states, scoring_min, scoring_max, alpha, scores = input_scenario_manually()
 
-    if alpha == 1.0:
+    if alpha == 0.0:
         criterion_name = "Вальда"
-    elif alpha == 0.0:
+    elif alpha == 1.0:
         criterion_name = "Макмакс"
     else:
-        criterion_name = f"Гурвіца (α={alpha})"
+        criterion_name = f"Гурвіца (α = {alpha})"
 
     criteria_values = calculate_hurwicz(scores, alpha)
     ranks = assign_ranks(criteria_values)
