@@ -1,6 +1,44 @@
+import json
+
+
+def load_scenario_from_json(file_path):
+    """
+    Завантажує сценарій тестування з JSON-файлу.
+    Повертає альтернативи, стани, систему оцінок, ступінь оптимізму та оцінки.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+            alternatives = data.get('alternatives', [])
+            states = data.get('states', [])
+            scoring_min = data.get('scoring_min', 1)
+            scoring_max = data.get('scoring_max', 10)
+            alpha = data.get('alpha', 0.5)
+            scores = data.get('scores', [])
+            return alternatives, states, scoring_min, scoring_max, alpha, scores
+    except FileNotFoundError:
+        print(f"Файл {file_path} не знайдено.")
+    except json.JSONDecodeError:
+        print(f"Помилка при зчитуванні JSON з файлу {file_path}.")
+    return [], [], 1, 10, 0.5, []
+
+
+def input_scenario_manually():
+    """
+    Дозволяє користувачеві ввести сценарій вручну.
+    Повертає альтернативи, стани, систему оцінок, ступінь оптимізму та оцінки.
+    """
+    alternatives = input_alternatives()
+    states = input_states()
+    scoring_min, scoring_max = input_scoring_system()
+    alpha = input_alpha()
+    scores = input_scores(alternatives, states, scoring_min, scoring_max)
+    return alternatives, states, scoring_min, scoring_max, alpha, scores
+
+
 def input_alternatives():
     """
-    Запитує кількість альтернатив та їх імена.
+    Запитує кількість альтернатив.
     Повертає список альтернатив.
     """
     while True:
@@ -22,7 +60,7 @@ def input_alternatives():
 
 def input_states():
     """
-    Запитує кількість зовнішніх умов (станів) та їх імена.
+    Запитує кількість зовнішніх умов (станів).
     Повертає список зовнішніх умов (станів).
     """
     while True:
@@ -139,11 +177,12 @@ def assign_ranks(criteria_values):
 
 
 def print_result_table(alternatives, states, scores, criteria_values, ranks, criterion_name):
+    # TODO: Improve output formatting
     """
     Виводить таблицю початкових значень (матрицю корисності) із стовпчиком
     обчислених значень критерію та стовпчиком з рангами.
     """
-    header = ["Альтернатива"] + states + [f"Критерій ({criterion_name})", "Ранг"]
+    header = ["Альтернатива"] + states + [f"Критерій {criterion_name}", "Ранг"]
     print("\nРезультати:")
     print("\t".join(header))
     for i in range(len(alternatives)):
@@ -153,12 +192,18 @@ def print_result_table(alternatives, states, scores, criteria_values, ranks, cri
 
 
 def main():
-    print('Критерії прийняття рішень в умовах невизначеності')
-    alternatives = input_alternatives()
-    states = input_states()
-    scoring_min, scoring_max = input_scoring_system()
-    scores = input_scores(alternatives, states, scoring_min, scoring_max)
-    alpha = input_alpha()
+    print('Критерії прийняття рішень в умовах невизначеності\n')
+
+    use_json = input("Бажаєте завантажити сценарій з JSON файлу? (y/n): ").strip().lower()
+
+    if use_json == 'y':
+        alternatives, states, scoring_min, scoring_max, alpha, scores = load_scenario_from_json('test.json')
+
+        if not (alternatives and states and scores):
+            print("Неповні або некоректні дані в файлі. Перевірте формат JSON.")
+            return
+    else:
+        alternatives, states, scoring_min, scoring_max, alpha, scores = input_scenario_manually()
 
     if alpha == 1.0:
         criterion_name = "Вальда"
