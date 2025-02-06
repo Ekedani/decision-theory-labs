@@ -13,14 +13,13 @@ def load_scenario_from_json(file_path):
             states = data.get('states', [])
             scoring_min = data.get('scoring_min', 1)
             scoring_max = data.get('scoring_max', 10)
-            alpha = data.get('alpha', 0.5)
             scores = data.get('scores', [])
-            return alternatives, states, scoring_min, scoring_max, alpha, scores
+            return alternatives, states, scoring_min, scoring_max, scores
     except FileNotFoundError:
         print(f"Файл {file_path} не знайдено.")
     except json.JSONDecodeError:
         print(f"Помилка при зчитуванні JSON з файлу {file_path}.")
-    return [], [], 1, 10, 0.5, []
+    return [], [], 1, 10, []
 
 
 def input_scenario_manually():
@@ -31,9 +30,8 @@ def input_scenario_manually():
     alternatives = input_alternatives()
     states = input_states()
     scoring_min, scoring_max = input_scoring_system()
-    alpha = input_alpha()
     scores = input_scores(alternatives, states, scoring_min, scoring_max)
-    return alternatives, states, scoring_min, scoring_max, alpha, scores
+    return alternatives, states, scoring_min, scoring_max, scores
 
 
 def input_alternatives():
@@ -109,7 +107,7 @@ def input_alpha():
     while True:
         try:
             alpha = float(input(
-                "\nВведіть коефіцієнт оптимізму (alpha) для критерію "
+                "Введіть коефіцієнт оптимізму (alpha) для критерію "
                 "(від 0 до 1, де 0 => Макмакс, 1 => Вальда): "
             ).strip())
             if 0 <= alpha <= 1:
@@ -131,7 +129,7 @@ def input_scores(alternatives, states, scoring_min, scoring_max):
         for state in states:
             while True:
                 try:
-                    score_input = input(f"  Введіть значення для {alt} при {state}: ")
+                    score_input = input(f"  Оцінка для {alt} при {state} (від {scoring_min} до {scoring_max}): ")
                     value = float(score_input)
                     if value < scoring_min:
                         value = scoring_min
@@ -203,14 +201,15 @@ def main():
     use_json = input("Бажаєте завантажити сценарій з JSON файлу? (y/n): ").strip().lower()
 
     if use_json == 'y':
-        alternatives, states, scoring_min, scoring_max, alpha, scores = load_scenario_from_json('test.json')
+        alternatives, states, scoring_min, scoring_max, scores = load_scenario_from_json('test.json')
 
         if not (alternatives and states and scores):
             print("Неповні або некоректні дані в файлі. Перевірте формат JSON.")
             return
     else:
-        alternatives, states, scoring_min, scoring_max, alpha, scores = input_scenario_manually()
+        alternatives, states, scoring_min, scoring_max, scores = input_scenario_manually()
 
+    alpha = input_alpha()
     if alpha == 0.0:
         criterion_name = "Вальда"
     elif alpha == 1.0:
