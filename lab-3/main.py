@@ -1,6 +1,43 @@
+import json
+
+
+def load_scenario_from_json(file_path):
+    """
+    Завантажує сценарій тестування з JSON-файлу.
+    Повертає альтернативи, стани, систему оцінок та оцінки.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+            alternatives = data.get('alternatives', [])
+            states = data.get('states', [])
+            scoring_min = data.get('scoring_min', 1)
+            scoring_max = data.get('scoring_max', 10)
+            scores = data.get('scores', [])
+            return alternatives, states, scoring_min, scoring_max, scores
+    except FileNotFoundError:
+        print(f"Файл {file_path} не знайдено.")
+    except json.JSONDecodeError:
+        print(f"Помилка при зчитуванні JSON з файлу {file_path}.")
+    return [], [], 1, 10, []
+
+
+def input_scenario_manually():
+    """
+    Дозволяє користувачеві ввести сценарій вручну.
+    Повертає альтернативи, стани, систему оцінок та оцінки.
+    """
+    alternatives = input_alternatives()
+    states = input_states()
+    scoring_min, scoring_max = input_scoring_system()
+    scores = input_scores(alternatives, states, scoring_min, scoring_max)
+    return alternatives, states, scoring_min, scoring_max, scores
+
+
 def input_alternatives():
     """
-    Запитує число альтернативних рішень та формує список альтернатив (A1, A2, ...).
+    Запитує кількість альтернатив.
+    Повертає список альтернатив.
     """
     while True:
         try:
@@ -16,7 +53,8 @@ def input_alternatives():
 
 def input_states():
     """
-    Запитує число зовнішніх умов (станів) та формує список станів (X1, X2, ...).
+    Запитує число зовнішніх умов (станів).
+    Повертає список зовнішніх умов (станів).
     """
     while True:
         try:
@@ -57,7 +95,7 @@ def input_scores(alternatives, states, scoring_min, scoring_max):
     то воно нормалізується (значення менше scoring_min замінюється на scoring_min, більше scoring_max – на scoring_max).
     Повертає матрицю оцінок як список списків.
     """
-    matrix = []
+    scores = []
     print("\nВведіть значення корисності для кожної альтернативи та кожного стану:")
     for alt in alternatives:
         row = []
@@ -67,17 +105,15 @@ def input_scores(alternatives, states, scoring_min, scoring_max):
                     score_input = input(f"  Оцінка для {alt} при {state} (від {scoring_min} до {scoring_max}): ")
                     value = float(score_input)
                     if value < scoring_min:
-                        print(f"  Значення {value} менше {scoring_min}. Нормалізуємо до {scoring_min}.")
                         value = scoring_min
                     elif value > scoring_max:
-                        print(f"  Значення {value} більше {scoring_max}. Нормалізуємо до {scoring_max}.")
                         value = scoring_max
                     row.append(value)
                     break
                 except ValueError:
                     print("  Некоректне значення, спробуйте ще раз. Будь ласка, введіть число.")
-        matrix.append(row)
-    return matrix
+        scores.append(row)
+    return scores
 
 
 def choose_criterion():
@@ -93,9 +129,9 @@ def choose_criterion():
         print("  2 – критерій Лапласа (максимізація середнього виграшу)")
         choice = input("Ваш вибір (1 або 2): ").strip()
         if choice == "1":
-            return "Sevidge"
+            return "sevidge"
         elif choice == "2":
-            return "Laplace"
+            return "laplace"
         else:
             print("Некоректний вибір. Будь ласка, введіть 1 або 2.")
 
@@ -156,7 +192,6 @@ def print_result_table(alternatives, states, matrix, criteria_values, ranks, cri
     """
     Виводить таблицю початкових значень (матрицю корисності) зі стовпчиком
     обчислених значень обраного критерію та стовпчиком з рангами.
-    Колонки формуються з однаковою шириною, а текст у клітинках центрується.
     """
     header = ["Альтернатива"] + states + [f"Критерій {criterion_label}", "Ранг"]
     rows = [header]
@@ -176,6 +211,30 @@ def print_result_table(alternatives, states, matrix, criteria_values, ranks, cri
 
 def main():
     print('Критерії Севіджа і Лапласа\n')
+
+    use_json = input("Бажаєте завантажити сценарій з JSON файлу? (y/n): ").strip().lower()
+
+    if use_json == 'y':
+        alternatives, states, scoring_min, scoring_max, scores = load_scenario_from_json('test.json')
+
+        if not (alternatives and states and scores):
+            print("Неповні або некоректні дані в файлі. Перевірте формат JSON.")
+            return
+    else:
+        alternatives, states, scoring_min, scoring_max, scores = input_scenario_manually()
+
+    criteria = choose_criterion()
+
+    if criteria == "sevidge":
+        crit_values = calculate_sevidge(scores)
+        ranks = assign_ranks(crit_values, descending=False)
+        criterion_label = "Севіджа"
+    else:
+        crit_values = calculate_laplace(scores)
+        ranks = assign_ranks(crit_values, descending=True)
+        criterion_label = "Лапласа"
+
+    print_result_table(alternatives, states, scores, crit_values, ranks, criterion_label)
 
 
 if __name__ == "__main__":

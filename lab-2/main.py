@@ -4,7 +4,7 @@ import json
 def load_scenario_from_json(file_path):
     """
     Завантажує сценарій тестування з JSON-файлу.
-    Повертає альтернативи, стани, систему оцінок, ступінь оптимізму та оцінки.
+    Повертає альтернативи, стани, систему оцінок та оцінки.
     """
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -25,7 +25,7 @@ def load_scenario_from_json(file_path):
 def input_scenario_manually():
     """
     Дозволяє користувачеві ввести сценарій вручну.
-    Повертає альтернативи, стани, систему оцінок, ступінь оптимізму та оцінки.
+    Повертає альтернативи, стани, систему оцінок та оцінки.
     """
     alternatives = input_alternatives()
     states = input_states()
@@ -63,7 +63,7 @@ def input_states():
     """
     while True:
         try:
-            n_states = int(input("\nВведіть кількість зовнішніх умов (станів): "))
+            n_states = int(input("Введіть кількість зовнішніх умов (станів): "))
             if n_states <= 0:
                 print("Кількість зовнішніх умов (станів) повинна бути додатнім числом.")
                 continue
