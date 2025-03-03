@@ -121,8 +121,10 @@ def input_scores(experts, alternatives, scoring_min, scoring_max):
                     score = float(score_input)
                     if score < scoring_min:
                         score = scoring_min
+                        print (f"  Значення оцінки менше за мінімальне. Буде використано значення {scoring_min}")
                     elif score > scoring_max:
                         score = scoring_max
+                        print (f"  Значення оцінки більше за максимальне. Буде використано значення {scoring_max}")
                     expert_scores.append(score)
                     break
                 except ValueError:
