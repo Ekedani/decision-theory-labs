@@ -108,7 +108,7 @@ def input_alpha():
         try:
             alpha = float(input(
                 "Введіть коефіцієнт оптимізму (alpha) для критерію "
-                "(від 0 до 1, де 0 => Макмакс, 1 => Вальда): "
+                "(від 0 до 1, де 1 => Макмакс, 0 => Вальда): "
             ).strip())
             if 0 <= alpha <= 1:
                 return alpha
@@ -133,8 +133,10 @@ def input_scores(alternatives, states, scoring_min, scoring_max):
                     value = float(score_input)
                     if value < scoring_min:
                         value = scoring_min
+                        print(f"  Значення оцінки менше за мінімальне. Буде використано значення {scoring_min}")
                     elif value > scoring_max:
                         value = scoring_max
+                        print(f"  Значення оцінки більше за максимальне. Буде використано значення {scoring_max}")
                     row.append(value)
                     break
                 except ValueError:
