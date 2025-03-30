@@ -1,3 +1,43 @@
+import json
+
+def load_scenario_from_json():
+    """
+    Завантажує сценарій тестування з JSON-файлу.
+    Повертає альтернативи, експертів та матрицю ранжувань.
+    JSON має містити ключі: "alternatives", "experts" та "rankings".
+    """
+    file_path = 'test.json'
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+            alternatives = data.get("alternatives", [])
+            experts = data.get("experts", [])
+            rankings = data.get("rankings", [])
+            if not alternatives:
+                print("Не знайдено альтернатив у файлі.")
+            if not experts:
+                print("Не знайдено експертів у файлі.")
+            if not rankings:
+                print("Не знайдено ранжувань у файлі.")
+            return alternatives, experts, rankings
+    except FileNotFoundError:
+        print(f"Файл {file_path} не знайдено.")
+    except json.JSONDecodeError:
+        print(f"Помилка при зчитуванні JSON з файлу {file_path}.")
+    return [], [], []
+
+
+def input_scenario_manually():
+    """
+    Дозволяє користувачеві ввести сценарій вручну.
+    Повертає альтернативи, експертів та матрицю ранжувань.
+    """
+    n, alternatives = input_number_of_alternatives()
+    experts = input_experts()
+    rankings_matrix = input_rankings(alternatives, experts)
+    return alternatives, experts, rankings_matrix
+
+
 def input_number_of_alternatives():
     """
     Запитує число альтернативних рішень.
@@ -127,10 +167,15 @@ def print_pareto_set(alternatives, pareto_indices):
 
 def main():
     print("Метод прямого перебору для побудови множини Парето\n")
+    use_json = input("Бажаєте завантажити сценарій з JSON файлу? (y/n): ").strip().lower()
 
-    n, alternatives = input_number_of_alternatives()
-    experts = input_experts()
-    rankings_matrix = input_rankings(alternatives, experts)
+    if use_json == "y":
+        alternatives, experts, rankings_matrix = load_scenario_from_json()
+        if not (alternatives and experts and rankings_matrix):
+            print("Неповні або некоректні дані в файлі. Завершення роботи.")
+            return
+    else:
+        alternatives, experts, rankings_matrix = input_scenario_manually()
 
     print_ranking_table(alternatives, experts, rankings_matrix)
     pareto_indices = determine_pareto_set(rankings_matrix)
