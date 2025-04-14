@@ -106,8 +106,10 @@ def input_scores(alternatives, states, scoring_min, scoring_max):
                     value = float(score_input)
                     if value < scoring_min:
                         value = scoring_min
+                        print(f"  Значення менше за мінімальне. Буде використано значення {scoring_min}")
                     elif value > scoring_max:
                         value = scoring_max
+                        print(f"  Значення більше за максимальне. Буде використано значення {scoring_max}")
                     row.append(value)
                     break
                 except ValueError:
